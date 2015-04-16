@@ -1,3 +1,5 @@
 .DS_Store
 .idea/
 *.sqlite3
+bower_components
+*.pyc
