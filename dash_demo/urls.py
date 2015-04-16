@@ -15,4 +15,4 @@ from . import settings
 if settings.DEBUG:
     urlpatterns += url(
         r'^$', 'django.contrib.staticfiles.views.serve', kwargs={
-            'path': 'index.html'}),
+            'path': 'app/dashboard/index.html'}),
