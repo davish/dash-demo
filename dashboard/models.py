@@ -11,4 +11,7 @@ class SignupStats(models.Model):
     aggregate_total_signups = models.IntegerField("Total signups to date")
 
     def __str__(self):
-        return self.aggregate_total_signups
+        return self.date.isoformat()
+
+    def __unicode__(self):
+        return self.date.isoformat()

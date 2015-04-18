@@ -1,0 +1,14 @@
+* line graph of signups, viewable by day, week, month
+* signups from reps overtime compared to non-rep signups
+* rep signups as a % of overall growth over time
+* cumulative growth over time, on a % weekly growth basis
+* Anything else you think would be valuable!
+
+Again, you can do this however you wish,
+though it needs to be in a way that the data can be loaded dynamically--
+meaning (for example) that the data should not be hard-coded into the page,
+since it will be changing all the time.  Please load the data into the database of your choice.
+(Don't load from csvs or any flat files.)
+
+Would be great if you could do this by next week--
+When you're done, I'd love to see the live version + all code + any code you used to load / change / adjust the data.
