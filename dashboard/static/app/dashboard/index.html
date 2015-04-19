@@ -5,10 +5,11 @@
     <link rel="stylesheet" href="/static/bower_components/bootstrap/dist/css/bootstrap-theme.min.css">
     <link rel="stylesheet" href="/bower_components/bootstrap/dist/js/bootstrap.min.js">
 
-    <script src="/static/bower_components/angular/angular.min.js"></script>
     <script src="/static/bower_components/Chart.js/Chart.min.js"></script>
+    <script src="/static/bower_components/angular/angular.min.js"></script>
     <link rel="stylesheet" href="/static/bower_components/angular-chart.js/dist/angular-chart.css">
     <script src="/static/bower_components/angular-chart.js/dist/angular-chart.js"></script>
+    <script  src="//cdnjs.cloudflare.com/ajax/libs/numeral.js/1.4.5/numeral.min.js"></script>
 
     <script src="/static/app/app.js"></script>
     <script src="/static/app/dashboard/dashboard.js"></script>
@@ -40,12 +41,18 @@
     <div class="row">
         <div class="col-md-6">
             <h3>Signups per {{ mode | unit}}</h3>
+            <button class="btn btn-default" ng-if="differentiate==true" ng-click="toggle('differentiate')" >Show just signups</button>
+            <button class="btn btn-default" ng-if="differentiate==false" ng-click="toggle('differentiate')" >Split signups from reps and non-reps</button>
+
+            <button class="btn btn-default" ng-if="cumulative==false" ng-click="toggle('cumulative')" >Show Total Signups over time</button>
+            <button class="btn btn-default" ng-if="cumulative==true" ng-click="toggle('cumulative')" >Show Signups per {{ mode | unit }}</button>
+
             <canvas id="line" options="{bezierCurve : false}" class="chart chart-line" data="bardata" labels="barlabels" legend="true" series="barseries" click="onClick">
             </canvas>
         </div>
         <div class="col-md-6">
-            <h3>Breakdown for this {{ mode+1 | unit }}</h3>
-            <canvas id="pie" class="chart chart-pie" data="piedata" labels="pielabels" legend="true"></canvas>
+            <h3>Breakdown for these {{ mode | unit }}s</h3>
+            <canvas id="pie" options="opts" class="chart chart-pie" data="piedata" labels="pielabels" legend="true"></canvas>
         </div>
     </div>
 </div>
