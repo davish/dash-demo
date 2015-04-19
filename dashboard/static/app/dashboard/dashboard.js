@@ -9,7 +9,7 @@ dashApp.controller('dashTestCtrl', ['$scope', '$http', function($scope, $http) {
         console.log(evt);
     };
     // sample data ?method=range&start=2014-9-2&end=2015-9-15
-    $http.get('/dashboard/api?year=2015').success(function(d) {
+    $http.get('/dashboard/api?method=range&start=2014-9-1&end=2014-9-14').success(function(d) {
         var data = JSON.parse(d.data);
         var dates = [];
         var stats = [[], []];
@@ -26,8 +26,10 @@ dashApp.controller('dashTestCtrl', ['$scope', '$http', function($scope, $http) {
         if (data.length <= 14) {
             for (var i in data) {
                 var e = data[i]['fields'];
-                var fdate = new Date(e.date).toLocaleDateString();
-                dates.push(fdate);
+                var fdate = new Date(e.date);
+                // for some reason, using local timezone gives the wrong date (day earlier in this case.
+                // TODO: Check in the morning if this still gives the right date.
+                dates.push((fdate.getUTCMonth()+1) +'/'+  fdate.getUTCDate() +'/'+ fdate.getUTCFullYear()%100);
                 stats[0].push(e['day_rep_signups']);
                 stats[1].push(e['day_nonrep_signups']);
             }
@@ -59,8 +61,8 @@ dashApp.controller('dashTestCtrl', ['$scope', '$http', function($scope, $http) {
                     month[0] += parseInt(e['day_rep_signups']);
                     month[1] += parseInt(e['day_nonrep_signups']);
                 }
-                var d = new Date(data[i]['fields'].date)
-                dates.push(month_names[d.getMonth()] + ' ' + d.getFullYear());
+                var d = new Date(data[i]['fields'].date);
+                dates.push(month_names[d.getUTCMonth()] + ' ' + d.getFullYear());
                 stats[0].push(month[0]);
                 stats[1].push(month[1]);
             }
@@ -73,5 +75,5 @@ month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'O
 // year is normal, but month is 0-based.
 function daysInMonth(d) {
     d = new Date(d); // make sure it's not a datestring, but an actual date object.
-    return new Date(d.getFullYear(), d.getMonth()+1, 0).getDate();
+    return new Date(d.getFullYear(), d.getUTCMonth()+1, 0).getDate();
 }
