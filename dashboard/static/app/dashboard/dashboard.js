@@ -2,11 +2,35 @@
  * Created by davis on 4/16/15.
  */
 var dashApp = angular.module('dash-demo', ['chart.js']);
+
+n = -1;
+
 dashApp.controller('dashTestCtrl', ['$scope', '$http', function($scope, $http) {
-    $scope.series = ['Rep Signups', 'Non-Rep Signups'];
+    $scope.barseries = ['Rep Signups', 'Non-Rep Signups'];
     $scope.onClick = function(points, evt) {
-        var date = points[0].label;
-        console.log(date);
+        var start = null, end = null;
+        if (n <= 14) { // currently displaying by day; can't zoom in any further.
+
+        }
+        else if (n <= 56) { // currently displaying by week, zoom into the seven days.
+            var date = new Date(points[0].label);
+            start = date;
+            end = new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate() + 6);
+        }
+        else if (n <= 730)  { // currently displaying by month
+            var date = new Date(points[0].label.slice(4), month_names.indexOf(points[0].label.slice(0,3)));
+            start = date;
+            console.log(start.toISOString().slice(0,10));
+            end = new Date(date.getUTCFullYear(), date.getUTCMonth()+1, 0);
+        }
+        else { // currently displaying by year
+
+        }
+        if (start && end) {
+            $scope.startDate = start.toISOString().slice(0, 10);
+            $scope.endDate = end.toISOString().slice(0, 10);
+            $scope.getData();
+        }
     };
     // by default, start with this year so far.
     var e = new Date();
@@ -18,14 +42,15 @@ dashApp.controller('dashTestCtrl', ['$scope', '$http', function($scope, $http) {
     $scope.getData = function() {
         $http.get('/dashboard/api?method=range&start='+$scope.startDate+'&end='+$scope.endDate).success(function(d) {
             var data = JSON.parse(d.data);
+            console.log(data[0]);
             data = data.sort(function(a, b) {
                 return new Date(a['fields'].date) - new Date(b['fields'].date);
             });
 
             var r = generateChart(data);
 
-            $scope.labels = r['dates'];
-            $scope.data = r['stats'];
+            $scope.barlabels = r['dates'];
+            $scope.bardata = r['stats'];
         });
     };
     $scope.getData();
@@ -40,23 +65,24 @@ function daysInMonth(d) {
 function generateChart(data) {
     var dates = [];
     var stats = [[], []];
-     /*
-     * if the length is less than 14, just display it by day.
-     * if the length is between 15 and 56, add it up by week.
-     * greater than 56, do it by month.
-     * greater than two years, do it by year.
-     * TODO: refactor into one for loop for compactness.
-     * */
+    /*
+    * if the length is less than 14, just display it by day.
+    * if the length is between 15 and 56, add it up by week.
+    * greater than 56, do it by month.
+    * greater than two years, do it by year.
+    * TODO: refactor into one for loop for compactness.
+    * */
+    n = data.length;
     if (data.length <= 14) {
-            for (var i in data) {
-                var e = data[i]['fields'];
-                var fdate = new Date(e.date);
-                // for some reason, using local timezone gives the wrong date (day earlier in this case.
-                // TODO: Check in the morning if this still gives the right date.
-                dates.push((fdate.getUTCMonth()+1) +'/'+  fdate.getUTCDate() +'/'+ fdate.getUTCFullYear()%100);
-                stats[0].push(e['day_rep_signups']);
-                stats[1].push(e['day_nonrep_signups']);
-            }
+        for (var i in data) {
+            var e = data[i]['fields'];
+            var fdate = new Date(e.date);
+            // for some reason, using local timezone gives the wrong date (day earlier in this case.
+            // TODO: Check in the morning if this still gives the right date.
+            dates.push((fdate.getUTCMonth()+1) +'/'+  fdate.getUTCDate() +'/'+ fdate.getUTCFullYear()%100);
+            stats[0].push(e['day_rep_signups']);
+            stats[1].push(e['day_nonrep_signups']);
+        }
     }
     /*
      * Have to remember that some data might not be there.
@@ -89,7 +115,10 @@ function generateChart(data) {
                 week[0] += parseInt(e['day_rep_signups']);
                 week[1] += parseInt(e['day_nonrep_signups']);
             }
-            dates.push(new Date(data[i]['fields'].date).toLocaleDateString());
+            var fdate = new Date(data[i]['fields'].date);
+
+            dates.push((fdate.getUTCMonth()+1) +'/'+  fdate.getUTCDate() +'/'+ fdate.getUTCFullYear()%100);
+            console.log(data[i]);
             stats[0].push(week[0]);
             stats[1].push(week[1]);
         }
