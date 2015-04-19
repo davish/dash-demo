@@ -7,6 +7,8 @@
  */
 var dashControllers = angular.module('dashControllers', ['chart.js']);
 
+
+
 n = -1;
 
 dashControllers.controller('dashTestCtrl', ['$scope', '$http', function($scope, $http) {
@@ -18,35 +20,32 @@ dashControllers.controller('dashTestCtrl', ['$scope', '$http', function($scope, 
         $scope[b] = !$scope[b];
         $scope.getData();
     };
-    $scope.toggleCumulative
+
     $scope.opts = {
         tooltipTemplate: " <%=label%>: <%= numeral(value).format('(00[.]00)') %> " +
         "- <%= numeral(circumference / 6.283).format('(0[.][00]%)') %>"
     };
     $scope.onClick = function(points, evt) {
         var start = null, end = null;
-        if (n <= 14) { // currently displaying by day; can't zoom in any further.
-
-        }
-        else if (n <= 56) { // currently displaying by week, zoom into the seven days.
+        if (n > 14)  { // zoom into a day view
             var match = points[0].label.match(/(\d+)\/(\d+)\/(\d+)/);
             var date = new Date(2000+parseInt(match[3]), parseInt(match[1])-1, match[2]);
             start = date;
             end = new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate() + 6);
         }
-        else if (n <= 730)  { // currently displaying by month
-            var date = new Date(points[0].label.slice(4), month_names.indexOf(points[0].label.slice(0,3)));
-            start = date;
-            end = new Date(date.getUTCFullYear(), date.getUTCMonth()+1, 0);
-        }
-        else { // currently displaying by year
-
-        }
-        if (start && end) {
+        if (start && end && start < end) {
             $scope.startDate = start.toISOString().slice(0, 10);
             $scope.endDate = end.toISOString().slice(0, 10);
             $scope.getData();
         }
+    };
+    $scope.zoomOut = function() {
+        var startZoom = new Date($scope.startDate);
+        var endZoom = new Date(startZoom.getUTCFullYear(), startZoom.getUTCMonth(),
+            startZoom.getUTCDate() + daysInMonth(startZoom)).toISOString().slice(0,10);
+        console.log(endZoom);
+        $scope.endDate = endZoom;
+        $scope.getData();
     };
     // by default, start with this year so far.
     var end = new Date();
@@ -66,7 +65,7 @@ dashControllers.controller('dashTestCtrl', ['$scope', '$http', function($scope, 
             var bardata;
             var barseries;
             $scope.barlabels = r['dates'];
-            if ($scope.differentiate) {
+            if ($scope.differentiate) { // if we're splitting up rep/non-rep signups
                 bardata = r['stats'].slice(0,2);
                 barseries = ['Rep Signups', 'Non-Rep Signups'];
             } else {
@@ -128,9 +127,9 @@ function generateChart(data) {
         }
     }
     /*
-     * Have to remember that some data might not be there.
+     * Have to remember that some data might not be there. if (data.length <=56)
      */
-    else if (data.length <=56) { // max is eight weeks. (should it be 12 weeks?)
+    else { // max is eight weeks. (should it be 12 weeks?)
         mode = 1;
         var i=0;
         var week = [0,0];
@@ -157,40 +156,6 @@ function generateChart(data) {
         stats[0].push(week[0]);
         stats[1].push(week[1]);
         stats[2].push(week[0]+week[1]);
-    }
-    /*
-     * This is harder, since months have variable length, and some days might be missing.
-     * I keep looping through, incrementing the counters, until the month changes.
-     * When that happens, I push to the arrays, and reset the counters.
-     */
-    else if (data.length <=730) { // by month
-        mode = 2;
-        var i=0;
-        var m = new Date(data[i]['fields'].date).getUTCMonth();
-        var month = [0,0];
-        for (i; i < data.length; i++) {
-            var element = data[i]['fields'];
-            var date = new Date(element.date);
-            if (date.getUTCMonth() == m) {
-                month[0] += parseInt(element['day_rep_signups']);
-                month[1] += parseInt(element['day_nonrep_signups']);
-            } else { // if we've gone into a new month,
-                // push last month's stuff
-                var lastMonth = new Date(date.getUTCFullYear(), date.getUTCMonth()-1);
-                stats[0].push(month[0]);
-                stats[1].push(month[1]);
-                stats[2].push(month[0]+month[1]);
-                dates.push(month_names[lastMonth.getUTCMonth()] + ' ' + date.getFullYear());
-                // start over
-                month[0] = parseInt(element['day_rep_signups']);
-                month[1] = parseInt(element['day_nonrep_signups']);
-                m = new Date(element.date).getUTCMonth(); // change the month counter
-            }
-        }
-        dates.push(month_names[new Date(data[i-1]['fields'].date).getUTCMonth()] + ' ' + date.getFullYear());
-        stats[0].push(month[0]);
-        stats[1].push(month[1]);
-        stats[2].push(month[0]+month[1]);
     }
 
     return {dates: dates, stats: stats, mode: mode};

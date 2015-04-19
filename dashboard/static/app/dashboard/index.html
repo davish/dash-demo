@@ -1,13 +1,17 @@
 <!DOCTYPE html>
-<html ng-app="dash-demo">
-<head lang="en">
+<html lang="en" ng-app="dash-demo">
+<head>
     <link rel="stylesheet" href="/static/bower_components/bootstrap/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="/static/bower_components/bootstrap/dist/css/bootstrap-theme.min.css">
-    <link rel="stylesheet" href="/bower_components/bootstrap/dist/js/bootstrap.min.js">
-
-    <script src="/static/bower_components/Chart.js/Chart.min.js"></script>
-    <script src="/static/bower_components/angular/angular.min.js"></script>
+    <link rel="stylesheet" href="/static/bower_components/bootstrap-datepicker/dist/css/bootstrap-datepicker.min.css">
     <link rel="stylesheet" href="/static/bower_components/angular-chart.js/dist/angular-chart.css">
+
+    <script src="/static/bower_components/jquery/dist/jquery.min.js"></script>
+    <script src="/static/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="/static/bower_components/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js"></script>
+    <script src="/static/bower_components/Chart.js/Chart.min.js"></script>
+
+    <script src="/static/bower_components/angular/angular.min.js"></script>
     <script src="/static/bower_components/angular-chart.js/dist/angular-chart.js"></script>
     <script  src="//cdnjs.cloudflare.com/ajax/libs/numeral.js/1.4.5/numeral.min.js"></script>
 
@@ -16,7 +20,7 @@
     <meta charset="UTF-8">
     <title>Dashboard</title>
 </head>
-<body>
+<body onload="$('.datepicker').datepicker({})">
 <nav class="nav navbar-default">
 <div class="container-fluid">
     <div class="navbar-header">
@@ -31,26 +35,34 @@
 </div>
 </nav>
 <div class="container" ng-controller="dashTestCtrl">
-    <div class="row">
-        <div class="col-md-6">
-            <input type="text" ng-model="startDate">
-            <input type="text" ng-model="endDate">
-            <button class="btn btn-default" id="sub" ng-click="getData()">Query!</button>
+    <div class="col-md-6" >
+        <input type="tpext" class="datepicker" data-date-format="yyyy-mm-dd" ng-model="startDate">
+        to
+        <input type="text" class="datepicker" data-date-format="yyyy-mm-dd" ng-model="endDate">
+        <button class="btn btn-default" id="sub" ng-click="getData()">Query!</button>
         </div>
-    </div>
     <div class="row">
-        <div class="col-md-6">
+        <div class="col-md-7">
             <h3>Signups per {{ mode | unit}}</h3>
-            <button class="btn btn-default" ng-if="differentiate==true" ng-click="toggle('differentiate')" >Show just signups</button>
-            <button class="btn btn-default" ng-if="differentiate==false" ng-click="toggle('differentiate')" >Split signups from reps and non-reps</button>
+            <button class="btn btn-default" ng-if="differentiate==true" ng-click="toggle('differentiate')" >
+                Show just signups
+            </button>
+            <button class="btn btn-default" ng-if="differentiate==false" ng-click="toggle('differentiate')" >
+                Split signups from reps and non-reps
+            </button>
 
-            <button class="btn btn-default" ng-if="cumulative==false" ng-click="toggle('cumulative')" >Show Total Signups over time</button>
-            <button class="btn btn-default" ng-if="cumulative==true" ng-click="toggle('cumulative')" >Show Signups per {{ mode | unit }}</button>
+            <button class="btn btn-default" ng-if="cumulative==false" ng-click="toggle('cumulative')" >
+                Show {{ mode | unit }} over {{ mode | unit }} growth
+            </button>
+            <button class="btn btn-default" ng-if="cumulative==true" ng-click="toggle('cumulative')" >
+                Show signups per {{ mode | unit }}
+            </button>
 
-            <canvas id="line" options="{bezierCurve : false}" class="chart chart-line" data="bardata" labels="barlabels" legend="true" series="barseries" click="onClick">
+            <button class="btn btn-default" ng-if="mode == 0" ng-click="zoomOut()">Zoom Out</button>
+            <canvas id="line" options="{bezierCurve : false, pointHitDetectionRadius : 1}" class="chart chart-line" data="bardata" labels="barlabels" legend="true" series="barseries" click="onClick">
             </canvas>
         </div>
-        <div class="col-md-6">
+        <div class="col-md-5">
             <h3>Breakdown for these {{ mode | unit }}s</h3>
             <canvas id="pie" options="opts" class="chart chart-pie" data="piedata" labels="pielabels" legend="true"></canvas>
         </div>
