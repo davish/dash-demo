@@ -37,6 +37,7 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'djangobower',
     'dashboard'
 )
 
@@ -100,7 +101,19 @@ USE_L10N = True
 
 USE_TZ = True
 
+# bower stuff
+PROJECT_ROOT = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), ".."),
+)
+BOWER_COMPONENTS_ROOT = os.path.join(PROJECT_ROOT, 'dashboard/static/bower_components')
 
+BOWER_INSTALLED_APPS = (
+    'bootstrap',
+    'angular',
+    'jquery',
+    'angular-chart.js',
+    'eternicode/bootstrap-datepicker'
+)
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 
