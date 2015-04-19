@@ -39,8 +39,13 @@
     </div>
     <div class="row">
         <div class="col-md-6">
-            <canvas id="line" class="chart chart-bar" data="bardata" labels="barlabels" legend="true" series="barseries" click="onClick">
+            <h3>Signups per {{ mode | unit}}</h3>
+            <canvas id="line" options="{bezierCurve : false}" class="chart chart-line" data="bardata" labels="barlabels" legend="true" series="barseries" click="onClick">
             </canvas>
+        </div>
+        <div class="col-md-6">
+            <h3>Breakdown for this {{ mode+1 | unit }}</h3>
+            <canvas id="pie" class="chart chart-pie" data="piedata" labels="pielabels" legend="true"></canvas>
         </div>
     </div>
 </div>
