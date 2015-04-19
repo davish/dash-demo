@@ -58,7 +58,30 @@ function generateChart(data) {
                 stats[1].push(e['day_nonrep_signups']);
             }
     }
-    else if (data.length <=56) { // max is eight weeks. (should it be 12 weeks?
+    /*
+     * Have to remember that some data might not be there.
+     */
+    else if (data.length <=56) { // max is eight weeks. (should it be 12 weeks?)
+        //var i=0;
+        //var week = [0,0];
+        //dates.push(new Date(data[i]['fields'].date).toLocaleDateString());
+        //for (i; i < data.length; i++) {
+        //    var e = data[i]['fields'];
+        //    var d = new Date(e.date);
+        //    week[0] += parseInt(e['day_rep_signups']);
+        //    week[1] += parseInt(e['day_nonrep_signups']);
+        //    if (d.getDay() == 0) {
+        //        if (i != 0) {
+        //            dates.push(new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()+1).toLocaleDateString());
+        //            stats[0].push(week[0]);
+        //            stats[1].push(week[1]);
+        //        }
+        //    }
+        //}
+        //// push the remaining data.
+        //stats[0].push(week[0]);
+        //stats[1].push(week[1]);
+
         for (var i=0; i<data.length;i+=7) {
             var week = [0,0];
             for (var j=0; j < 7 && i+j < data.length; j++) {
@@ -72,24 +95,35 @@ function generateChart(data) {
         }
     }
     /*
-     * This is harder, since months have variable length.
-     * What I'm going to do is initiate i outside the for loop,
-     * and refer to it in the += so it goes up by the right amount every time.
+     * This is harder, since months have variable length, and some days might be missing.
+     * I keep looping through, incrementing the counters, until the month changes.
+     * When that happens, I push to the arrays, and reset the counters.
      */
     else if (data.length <=730) { // by month
-        var i;
-        for (i=0; i<data.length; i += daysInMonth(data[i]['fields'].date)) {
-            var month = [0,0];
-            for (var j=0; j < daysInMonth(data[i]['fields'].date) && i+j < data.length; j++) {
-                e = data[i+j]['fields'];
+        var i=0;
+        var m = new Date(data[i]['fields'].date).getUTCMonth();
+        var month = [0,0];
+        for (i; i < data.length; i++) {
+            var e = data[i]['fields'];
+            var d = new Date(e.date);
+            if (d.getUTCMonth() == m) {
                 month[0] += parseInt(e['day_rep_signups']);
                 month[1] += parseInt(e['day_nonrep_signups']);
+            } else { // if we've gone into a new month,
+                // push last month's stuff
+                var lastMonth = new Date(d.getUTCFullYear(), d.getUTCMonth()-1);
+                stats[0].push(month[0]);
+                stats[1].push(month[1]);
+                dates.push(month_names[lastMonth.getUTCMonth()] + ' ' + d.getFullYear());
+                // start over
+                month[0] = parseInt(e['day_rep_signups']);
+                month[1] = parseInt(e['day_nonrep_signups']);
+                m = new Date(e.date).getUTCMonth(); // change the month counter
             }
-            var d = new Date(data[i]['fields'].date);
-            dates.push(month_names[d.getUTCMonth()] + ' ' + d.getFullYear());
-            stats[0].push(month[0]);
-            stats[1].push(month[1]);
         }
+        dates.push(month_names[new Date(data[i-1]['fields'].date).getUTCMonth()] + ' ' + d.getFullYear());
+        stats[0].push(month[0]);
+        stats[1].push(month[1]);
     }
     return {dates: dates, stats: stats};
 }
