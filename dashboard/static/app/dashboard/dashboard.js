@@ -3,12 +3,10 @@
  *
  * DONE: Datepicker for range
  * DONE: "Zoom Out" button
- * DONE: Make zoom out better
+ * DONE: Make zoom better
  * DONE: Map queries to URLs for navigation
  * DONE: WoW growth instead of just cumulative signups
- * DONE: Fix week counting, it's a problem.
  * DONE: Make WoW growth use aggregate fields from statistics to save on Math and make it not change based on startdate
- * DONE: fix no split cumulative growth not working
  * DONE: save the chart(s) to a PDF
  * DONE: Forward and back buttons for navigating between months
  * DONE: Add month view
