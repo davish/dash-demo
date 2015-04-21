@@ -35,15 +35,24 @@
 </div>
 </nav>
 <div class="container" ng-controller="dashTestCtrl">
-    <div class="col-md-6" >
-        <input type="tpext" class="datepicker" data-date-format="yyyy-mm-dd" ng-model="startDate">
-        to
-        <input type="text" class="datepicker" data-date-format="yyyy-mm-dd" ng-model="endDate">
-        <button class="btn btn-default" id="sub" ng-click="getData()">Query!</button>
+    <div class="row">
+        <h3>Signups per {{ mode | unit}}</h3>
+
+        <div class="col-md-5" >
+            <input type="tpext" class="datepicker" data-date-format="yyyy-mm-dd" ng-model="startDate">
+            to
+            <input type="text" class="datepicker" data-date-format="yyyy-mm-dd" ng-model="endDate">
         </div>
+        <div class="col-md-3">
+            <div class="btn-group" role="group" aria-label="...">
+                <button type="button" class="btn btn-default" ng-click="mode=0; redrawGraphs(rawData)" ng-class="{'active': (mode==0)}">Day</button>
+                <button type="button" class="btn btn-default" ng-click="mode=1; redrawGraphs(rawData)" ng-class="{'active': (mode==1)}">Week</button>
+                <button type="button" class="btn btn-default" ng-click="mode=2; redrawGraphs(rawData)" ng-class="{'active': (mode==2)}">Month</button>
+            </div>
+        </div>
+    </div>
     <div class="row">
         <div class="col-md-7">
-            <h3>Signups per {{ mode | unit}}</h3>
             <button class="btn btn-default" ng-if="differentiate==true" ng-click="toggle('differentiate')" >
                 Show just signups
             </button>
@@ -59,12 +68,12 @@
             </button>
 
             <button class="btn btn-default" ng-if="mode == 0" ng-click="zoomOut()">Zoom Out</button>
-            <canvas id="line" options="{bezierCurve : false, pointHitDetectionRadius : 1}" class="chart chart-line" data="bardata" labels="barlabels" legend="true" series="barseries" click="onClick">
+            <canvas id="line" options="line.options" class="chart chart-line" data="line.data" labels="line.labels" legend="true" series="line.series" click="line.onClick">
             </canvas>
         </div>
         <div class="col-md-5">
             <h3>Breakdown for these {{ mode | unit }}s</h3>
-            <canvas id="pie" options="opts" class="chart chart-pie" data="piedata" labels="pielabels" legend="true"></canvas>
+            <canvas id="pie" options="pie.options" class="chart chart-pie" data="pie.data" labels="pie.labels" legend="true"></canvas>
         </div>
     </div>
 </div>
