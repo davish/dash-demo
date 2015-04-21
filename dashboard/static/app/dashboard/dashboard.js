@@ -186,7 +186,8 @@ dashControllers.controller('dashTestCtrl', ['$scope', '$http', '$location', func
     };
 
     $scope.changeLocation  = function(n, o){
-        $location.path($scope.startDate+'/'+$scope.endDate+'/'+$scope.mode+($scope.differentiate?"1":"0")+($scope.cumulative ? "1":"0"));
+        if (n)
+            $location.path($scope.startDate+'/'+$scope.endDate+'/'+$scope.mode+($scope.differentiate?"1":"0")+($scope.cumulative ? "1":"0"));
     };
     $scope.$watch(function(scope) {return scope.startDate}, $scope.changeLocation);
     $scope.$watch(function(scope) {return scope.endDate}, $scope.changeLocation);
@@ -196,6 +197,7 @@ dashControllers.controller('dashTestCtrl', ['$scope', '$http', '$location', func
 
     $scope.$watch(function() {return $location.path()}, function(n, o) {
         var r = n.match(/\/([0-9\-]+)\/([0-9\-]+)\/([0-9])([0-9])([0-9])/);
+        console.log(n);
         if (r) {
             $scope.startDate = r[1];
             $scope.endDate = r[2];
