@@ -8,6 +8,7 @@
  * DONE: Fix week counting, it's a problem.
  * DONE: Make WoW growth use aggregate fields from statistics to save on Math and make it not change based on startdate
  * TODO: save the chart(s) to a PDF
+ * TODO: Add month view
  */
 var dashControllers = angular.module('dashControllers', ['chart.js']);
 
@@ -155,7 +156,7 @@ function genChart(data, cumulative, mode) {
     /*
      * Have to remember that some data might not be there. if (data.length <=56)
      */
-    else { // max is eight weeks. (should it be 12 weeks?)
+    else if (mode == 1) { // max is eight weeks. (should it be 12 weeks?)
         var i=0;
         var week = [0,0,0];
         var fdate = new Date(new Date(data[i]['fields'].date));
@@ -193,6 +194,34 @@ function genChart(data, cumulative, mode) {
         stats[0].push(week[0]);
         stats[1].push(week[1]);
         stats[2].push(week[0]+week[1]);
+    }
+    else {
+        var i=0;
+        var m = new Date(data[i]['fields'].date).getUTCMonth();
+        var month = [0,0];
+        for (i; i < data.length; i++) {
+            var element = data[i]['fields'];
+            var date = new Date(element.date);
+            if (date.getUTCMonth() == m) {
+                month[0] += parseInt(element['day_rep_signups']);
+                month[1] += parseInt(element['day_nonrep_signups']);
+            } else { // if we've gone into a new month,
+                // push last month's stuff
+                var lastMonth = new Date(date.getUTCFullYear(), date.getUTCMonth()-1);
+                if (cumulative) cumulativeWeek(month, element);
+                stats[0].push(month[0]);
+                stats[1].push(month[1]);
+                dates.push(month_names[lastMonth.getUTCMonth()] + ' ' + date.getUTCFullYear());
+                // start over
+                month[0] = parseInt(element['day_rep_signups']);
+                month[1] = parseInt(element['day_nonrep_signups']);
+                m = new Date(element.date).getUTCMonth(); // change the month counter
+            }
+        }
+        dates.push(month_names[new Date(data[i-1]['fields'].date).getUTCMonth()] + ' ' + date.getFullYear());
+        if (cumulative) cumulativeWeek(month, element);
+        stats[0].push(month[0]);
+        stats[1].push(month[1]);
     }
 
     return {dates: dates, stats: stats, mode: mode};
