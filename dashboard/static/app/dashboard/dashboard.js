@@ -14,25 +14,23 @@ var dashControllers = angular.module('dashControllers', ['chart.js']);
 n = -1;
 
 dashControllers.controller('dashTestCtrl', ['$scope', '$http', '$location', function($scope, $http, $location) {
+    $scope.mode = 1;
     $scope.differentiate = true;
     $scope.cumulative = false;
     $scope.toggle = function(b) {
         $scope[b] = !$scope[b];
-        $scope.refreshGraphs();
-
         if (b === 'cumulative') {
             if ($scope.cumulative) {
                 $scope.line.options.scaleLabel = "<%= value %> %";
-                //$scope.line.options.scaleOverride = true;
                 $scope.line.options.multiTooltipTemplate = '<%=datasetLabel%>: <%= numeral(value).format(\'0.00\') %>%';
                 $scope.line.options.tooltipTemplate = "<%=label%>: <%=numeral(value).format('0.00')%>%";
             } else {
-                $scope.line.options.scaleLabel = undefined;
-                //$scope.line.options.scaleOverride = false;
+                $scope.line.options.scaleLabel = "<%= value %>";
                 $scope.line.options.multiTooltipTemplate = '<%=datasetLabel%>: <%= numeral(value).format(\'0,0\') %>';
                 $scope.line.options.tooltipTemplate = '<%=label%>: <%=numeral(value).format(\'0,0\')%>'
             }
         }
+        $scope.redrawGraphs($scope.rawData);
     };
 
     $scope.line = {
@@ -211,8 +209,8 @@ function absoluteElement(element) {
 function cumulativeElement(e) {
     return [
         e['day_rep_signups'] / (e['aggregate_rep_signups']-e['day_rep_signups'])*100,
-        e['day_nonrep_signups'] / ((e['aggregate_total_signups'] - e['aggregate_rep_signups']) - e['day_nonrep-signups'])*100,
-        5
+        e['day_nonrep_signups'] / ((e['aggregate_total_signups'] - e['aggregate_rep_signups']) - e['day_nonrep_signups'])*100,
+        e['day_rep_signups']+e['day_nonrep_signups'] / (e['aggregate_total_signups'] - (e['day_rep_signups']+e['day_nonrep-signups']))*100
     ]
 }
 
