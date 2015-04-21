@@ -5,3 +5,7 @@ var dashApp = angular.module('dash-demo', [
     'dashControllers',
     'dashFilters'
 ]);
+
+dashApp.config(['$compileProvider', function($compileProvider) {
+  $compileProvider.aHrefSanitizationWhitelist(/^\s*(https?|file|data):/);
+}]);

@@ -14,7 +14,7 @@
 
     <script src="/static/bower_components/angular/angular.min.js"></script>
     <script src="/static/bower_components/angular-chart.js/dist/angular-chart.js"></script>
-    <script  src="//cdnjs.cloudflare.com/ajax/libs/numeral.js/1.4.5/numeral.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/numeral.js/1.4.5/numeral.min.js"></script>
 
     <script src="/static/app/app.js"></script>
     <script src="/static/app/dashboard/dashboard.js"></script>
@@ -39,12 +39,13 @@
     <div class="row">
         <h3>Signups per {{ mode | unit}}</h3>
 
-        <div class="col-md-5" >
+        <div class="col-md-4" >
             <input type="tpext" class="datepicker" data-date-format="yyyy-mm-dd" ng-model="startDate">
             to
             <input type="text" class="datepicker" data-date-format="yyyy-mm-dd" ng-model="endDate">
         </div>
-
+        <div class="col-md-1">
+        </div>
         <div class="col-md-3">
             <div class="btn-group" role="group" aria-label="...">
                 <button type="button" class="btn btn-default" ng-click="mode=0;" ng-class="{'active': (mode==0)}">D</button>
@@ -55,6 +56,8 @@
                 <button class="btn btn-default" ng-click="nav.zoomOut()"><span class="glyphicon glyphicon-zoom-out"></span></button>
                 <button class="btn btn-default" ng-click="nav.zoomIn()"><span class="glyphicon glyphicon-zoom-in"></span></button>
             </div>
+            <a class="btn btn-default" id="download" download="chart.jpg" href="{{ downloadhref }}"><span class="glyphicon glyphicon-download-alt"></span></a>
+
         </div>
     </div>
     <div class="row">

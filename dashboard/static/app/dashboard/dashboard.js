@@ -9,7 +9,7 @@
  * DONE: Fix week counting, it's a problem.
  * DONE: Make WoW growth use aggregate fields from statistics to save on Math and make it not change based on startdate
  * DONE: fix no split cumulative growth not working
- * TODO: save the chart(s) to a PDF
+ * DONE: save the chart(s) to a PDF
  * DONE: Forward and back buttons for navigating between months
  * DONE: Add month view
  */
@@ -32,7 +32,7 @@ dashControllers.controller('dashTestCtrl', ['$scope', '$http', '$location', func
             }
         }
     };
-
+    // options and data for the line graph
     $scope.line = {
         data: [],
         series: [],
@@ -71,7 +71,7 @@ dashControllers.controller('dashTestCtrl', ['$scope', '$http', '$location', func
             }
         }
     };
-
+    // options and data for the pie graph.
     $scope.pie = {
         data: [],
         labels: ["Rep Signups", "Non-Rep Signups"],
@@ -81,45 +81,63 @@ dashControllers.controller('dashTestCtrl', ['$scope', '$http', '$location', func
             "(<%= numeral(value).format('0,0') %>)"
         }
     };
-
+    // navigational functions
     $scope.nav = {
         zoomIn: function() {
-            var endNow = new Date($scope.endDate); // current end point
-
             var decrement;
             if ($scope.mode == 0) {
-                decrement = 7;
+                decrement = 2;
             } else if ($scope.mode == 1) {
-                decrement = 14;
+                decrement = 7;
             } else if ($scope.mode == 2) {
-                decrement = 30;
+                decrement = 28;
             }
+            var startNow = new Date($scope.startDate);
+            var endNow = new Date($scope.endDate); // current end point
 
-            $scope.endDate = new Date(
+            var startNew = new Date(
+                startNow.getUTCFullYear(),
+                startNow.getUTCMonth(),
+                startNow.getUTCDate() + decrement
+            );
+            var endNew = new Date(
                 endNow.getUTCFullYear(),
                 endNow.getUTCMonth(),
                 endNow.getUTCDate() - decrement
-            ).toISOString().slice(0, 10);
-            $scope.refreshGraphs();
+            );
+            if (startNew < endNew) {
+                $scope.startDate = startNew.toISOString().slice(0, 10);
+                $scope.endDate = endNew.toISOString().slice(0, 10);
+                $scope.refreshGraphs();
+            }
+
         },
         zoomOut: function() {
-            var endNow = new Date($scope.endDate); // current end point
-
             var increment;
             if ($scope.mode == 0) {
-                increment = 7;
+                increment = 2;
             } else if ($scope.mode == 1) {
-                increment = 14;
+                increment = 7;
             } else if ($scope.mode == 2) {
-                increment = 30;
+                increment = 28;
             }
-            $scope.endDate = new Date(
+            var startNow = new Date($scope.startDate);
+            var endNow = new Date($scope.endDate); // current end point
+            var startNew = new Date(
+                startNow.getUTCFullYear(),
+                startNow.getUTCMonth(),
+                startNow.getUTCDate() - increment
+            );
+            var endNew = new Date(
                 endNow.getUTCFullYear(),
                 endNow.getUTCMonth(),
                 endNow.getUTCDate() + increment
-            ).toISOString().slice(0, 10);
-
-            $scope.refreshGraphs();
+            );
+            if (startNew < endNew) {
+                $scope.startDate = startNew.toISOString().slice(0, 10);
+                $scope.endDate = endNew.toISOString().slice(0, 10);
+                $scope.refreshGraphs();
+            }
         },
         back: function() {
             var stdt = new Date($scope.startDate); // startdate in a date variable so we can use it.
@@ -207,8 +225,7 @@ dashControllers.controller('dashTestCtrl', ['$scope', '$http', '$location', func
         });
     };
     $scope.redrawGraphs = function(data) {
-
-        if ($scope.mode == 0 && data.length > 60) {
+        if ($scope.mode == 0 && data.length > 45) {
             $scope.mode = 1;
         }
         else if ($scope.mode == 1 && data.length < 27) {
@@ -228,6 +245,8 @@ dashControllers.controller('dashTestCtrl', ['$scope', '$http', '$location', func
             $scope.pie.data = [r['stats'][0].reduce(function(x,y){return x+y}), r['stats'][1].reduce(function(x,y){return x+y})];
         else
             $scope.pie.data = [];
+        var url = $('#line')[0].toDataURL();
+        $scope.downloadhref = url;
     };
     //$scope.refreshGraphs();
 }]);
@@ -370,4 +389,8 @@ angular.module('dashFilters', []).filter('unit', function() {
                 return "";
         }
     }
+});
+
+$('#download').click(function() {
+    console.log('hi');
 });
