@@ -21,7 +21,7 @@ def import_stats(request):
         form = UploadFileForm(request.POST, request.FILES)
         if form.is_valid():
             save_from_csv(request.FILES['file'])
-            return HttpResponseRedirect('thanks/')
+            return HttpResponseRedirect('/')
     else:
         form = UploadFileForm()
     return render_to_response('dashboard/import.html', {'form': form}, context_instance=RequestContext(request))
