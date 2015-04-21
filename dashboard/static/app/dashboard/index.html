@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" ng-app="dash-demo">
 <head>
+    <meta charset="utf-8">
     <link rel="stylesheet" href="/static/bower_components/bootstrap/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="/static/bower_components/bootstrap/dist/css/bootstrap-theme.min.css">
     <link rel="stylesheet" href="/static/bower_components/bootstrap-datepicker/dist/css/bootstrap-datepicker.min.css">
@@ -43,25 +44,39 @@
             to
             <input type="text" class="datepicker" data-date-format="yyyy-mm-dd" ng-model="endDate">
         </div>
+
         <div class="col-md-3">
             <div class="btn-group" role="group" aria-label="...">
-                <button type="button" class="btn btn-default" ng-click="mode=0; refreshGraphs(rawData)" ng-class="{'active': (mode==0)}">Day</button>
-                <button type="button" class="btn btn-default" ng-click="mode=1; refreshGraphs(rawData)" ng-class="{'active': (mode==1)}">Week</button>
-                <button type="button" class="btn btn-default" ng-click="mode=2; refreshGraphs(rawData)" ng-class="{'active': (mode==2)}">Month</button>
+                <button type="button" class="btn btn-default" ng-click="mode=0;" ng-class="{'active': (mode==0)}">D</button>
+                <button type="button" class="btn btn-default" ng-click="mode=1;" ng-class="{'active': (mode==1)}">W</button>
+                <button type="button" class="btn btn-default" ng-click="mode=2;" ng-class="{'active': (mode==2)}">M</button>
+            </div>
+            <div class="btn-group" role="group" aria-label="...">
+                <button class="btn btn-default" ng-click="nav.zoomOut()"><span class="glyphicon glyphicon-zoom-out"></span></button>
+                <button class="btn btn-default" ng-click="nav.zoomIn()"><span class="glyphicon glyphicon-zoom-in"></span></button>
             </div>
         </div>
     </div>
     <div class="row">
-        <div class="col-md-7">
+        <div class="col-md-3">
             <button class="btn btn-default" ng-class="{'active': differentiate}" ng-click="toggle('differentiate')" >
-                Split rep/non-rep signups
+                Rep/Non-Rep
             </button>
-
+        </div>
+        <div class="col-md-2">
+            <div class="btn-group" role="group">
+                <button type="button" ng-click="nav.back();" class="btn btn-default">&lt;&lt;</button>
+                <button type="button" ng-click="nav.forward()" class="btn btn-default">&gt;&gt;</button>
+            </div>
+        </div>
+        <div class="col-md-2">
             <button class="btn btn-default" ng-class="{'active': cumulative}" ng-click="toggle('cumulative')" >
                 {{ mode | unit }} over {{ mode | unit }} growth
             </button>
-
-            <button class="btn btn-default" ng-if="mode == 0" ng-click="zoomOut()">Zoom Out</button>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-7">
             <canvas id="line" options="line.options" class="chart chart-line" data="line.data" labels="line.labels" legend="true" series="line.series" click="line.onClick">
             </canvas>
         </div>

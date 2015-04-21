@@ -2,36 +2,35 @@
  * Created by davis on 4/16/15.
  *
  * DONE: Datepicker for range
- * DONE: "Zoom Out" button TODO: Make zoom out better
+ * DONE: "Zoom Out" button
+ * DONE: Make zoom out better
  * DONE: Map queries to URLs for navigation
  * DONE: WoW growth instead of just cumulative signups
  * DONE: Fix week counting, it's a problem.
  * DONE: Make WoW growth use aggregate fields from statistics to save on Math and make it not change based on startdate
+ * DONE: fix no split cumulative growth not working
  * TODO: save the chart(s) to a PDF
- * TODO: Add month view
+ * DONE: Forward and back buttons for navigating between months
+ * DONE: Add month view
  */
 var dashControllers = angular.module('dashControllers', ['chart.js']);
 
 n = -1;
 
 dashControllers.controller('dashTestCtrl', ['$scope', '$http', '$location', function($scope, $http, $location) {
-    $scope.mode = 1;
-    $scope.differentiate = true;
-    $scope.cumulative = false;
     $scope.toggle = function(b) {
         $scope[b] = !$scope[b];
         if (b === 'cumulative') {
             if ($scope.cumulative) {
-                $scope.line.options.scaleLabel = "<%= value %> %";
-                $scope.line.options.multiTooltipTemplate = '<%=datasetLabel%>: <%= numeral(value).format(\'0.00\') %>%';
+                $scope.line.options.scaleLabel = " <%= value %> %";
+                $scope.line.options.multiTooltipTemplate = "<%=datasetLabel%>: <%= numeral(value).format('0.00')%>%";
                 $scope.line.options.tooltipTemplate = "<%=label%>: <%=numeral(value).format('0.00')%>%";
             } else {
-                $scope.line.options.scaleLabel = "<%= value %>";
-                $scope.line.options.multiTooltipTemplate = '<%=datasetLabel%>: <%= numeral(value).format(\'0,0\') %>';
+                $scope.line.options.scaleLabel = " <%= value %>";
+                $scope.line.options.multiTooltipTemplate = "<%=datasetLabel%>: <%= numeral(value).format('0,0')%>";
                 $scope.line.options.tooltipTemplate = '<%=label%>: <%=numeral(value).format(\'0,0\')%>'
             }
         }
-        $scope.redrawGraphs($scope.rawData);
     };
 
     $scope.line = {
@@ -39,6 +38,7 @@ dashControllers.controller('dashTestCtrl', ['$scope', '$http', '$location', func
         series: [],
         labels: [],
         options: {
+            animation: false,
             bezierCurve : false,
             pointHitDetectionRadius : 1,
             multiTooltipTemplate: '<%=datasetLabel%>: <%= numeral(value).format(\'0,0\') %>',
@@ -53,10 +53,16 @@ dashControllers.controller('dashTestCtrl', ['$scope', '$http', '$location', func
             var start = null, end = null;
             if ($scope.mode == 1)  { // zoom into a day view
                 var match = points[0].label.match(/(\d+)\/(\d+)\/(\d+)/);
-                var date = new Date(2000+parseInt(match[3]), parseInt(match[1])-1, match[2]);
+                var date = new Date(2000+parseInt(match[3]), parseInt(match[1])-1, match[2]); // Y3K bug :)
                 start = date;
                 end = new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate() + 6);
                 $scope.mode = 0;
+            }
+            else if ($scope.mode == 2) {
+                var match = points[0].label.match(/([A-z]+) ([0-9]+)/);
+                start = new Date(match[2], month_names.indexOf(match[1]), 1);
+                end = new Date(start.getUTCFullYear(), start.getUTCMonth()+1, 0);
+                $scope.mode = 1;
             }
             if (start && end && start < end) {
                 $scope.startDate = start.toISOString().slice(0, 10);
@@ -76,34 +82,121 @@ dashControllers.controller('dashTestCtrl', ['$scope', '$http', '$location', func
         }
     };
 
-    $scope.zoomOut = function() {
-        var startZoom = new Date($scope.startDate);
-        var endZoom = new Date(startZoom.getUTCFullYear(), startZoom.getUTCMonth(),
-            startZoom.getUTCDate() + daysInMonth(startZoom)).toISOString().slice(0,10);
-        console.log(endZoom);
-        $scope.endDate = endZoom;
-        $scope.refreshGraphs();
+    $scope.nav = {
+        zoomIn: function() {
+            var endNow = new Date($scope.endDate); // current end point
+
+            var decrement;
+            if ($scope.mode == 0) {
+                decrement = 7;
+            } else if ($scope.mode == 1) {
+                decrement = 14;
+            } else if ($scope.mode == 2) {
+                decrement = 30;
+            }
+
+            $scope.endDate = new Date(
+                endNow.getUTCFullYear(),
+                endNow.getUTCMonth(),
+                endNow.getUTCDate() - decrement
+            ).toISOString().slice(0, 10);
+            $scope.refreshGraphs();
+        },
+        zoomOut: function() {
+            var endNow = new Date($scope.endDate); // current end point
+
+            var increment;
+            if ($scope.mode == 0) {
+                increment = 7;
+            } else if ($scope.mode == 1) {
+                increment = 14;
+            } else if ($scope.mode == 2) {
+                increment = 30;
+            }
+            $scope.endDate = new Date(
+                endNow.getUTCFullYear(),
+                endNow.getUTCMonth(),
+                endNow.getUTCDate() + increment
+            ).toISOString().slice(0, 10);
+
+            $scope.refreshGraphs();
+        },
+        back: function() {
+            var stdt = new Date($scope.startDate); // startdate in a date variable so we can use it.
+            var enddt = new Date($scope.endDate);
+            var decrement; // ISOString with new start date.
+            if ($scope.mode == 0) { // decrement by one day. (-1)
+                decrement = 1;
+            } else if ($scope.mode == 1) { // one week (-7)
+                decrement = 7;
+            } else if ($scope.mode == 2) { // one month (-daysInMonth(month))
+                decrement = daysInMonth(stdt);
+            }
+            $scope.startDate = new Date(
+                stdt.getUTCFullYear(),
+                stdt.getUTCMonth(),
+                stdt.getUTCDate()-decrement
+            ).toISOString().slice(0,10);
+            $scope.endDate = new Date(
+                enddt.getUTCFullYear(),
+                enddt.getUTCMonth(),
+                enddt.getUTCDate()-decrement
+            ).toISOString().slice(0,10);
+            $scope.refreshGraphs();
+        },
+        forward: function() {
+            var stdt = new Date($scope.startDate); // startdate in a date variable so we can use it.
+            var enddt = new Date($scope.endDate);
+            var increment; // ISOString with new start date.
+            if ($scope.mode == 0) { // decrement by one day. (-1)
+                increment = 1;
+            } else if ($scope.mode == 1) { // one week (-7)
+                increment = 7;
+            } else if ($scope.mode == 2) { // one month (-daysInMonth(month))
+                increment = daysInMonth(stdt);
+            }
+            $scope.startDate = new Date(
+                stdt.getUTCFullYear(),
+                stdt.getUTCMonth(),
+                stdt.getUTCDate()+increment
+            ).toISOString().slice(0,10);
+            $scope.endDate = new Date(
+                enddt.getUTCFullYear(),
+                enddt.getUTCMonth(),
+                enddt.getUTCDate()+increment
+            ).toISOString().slice(0,10);
+            $scope.refreshGraphs();
+        }
     };
-    // by default, start with this year so far.
-    var end = new Date();
-    var start = new Date(end.getUTCFullYear(), 0);
 
-    $scope.startDate = start.toISOString().slice(0,10);
-    $scope.endDate = end.toISOString().slice(0,10);
-    // sample data ?method=range&start=2014-9-2&end=2015-9-15
+    $scope.changeLocation  = function(n, o){
+        $location.path($scope.startDate+'/'+$scope.endDate+'/'+$scope.mode+($scope.differentiate?"1":"0")+($scope.cumulative ? "1":"0"));
+    };
+    $scope.$watch(function(scope) {return scope.startDate}, $scope.changeLocation);
+    $scope.$watch(function(scope) {return scope.endDate}, $scope.changeLocation);
+    $scope.$watch(function(scope){return scope.mode}, $scope.changeLocation);
+    $scope.$watch(function(scope){return scope.differentiate}, $scope.changeLocation);
+    $scope.$watch(function(scope){return scope.cumulative}, $scope.changeLocation);
 
-    $scope.$watch(function(scope) { return scope.startDate }, function(n, o) {
-        $location.path($scope.startDate + '/' + $scope.endDate);
-        $scope.refreshGraphs();
-    });
-    $scope.$watch(function(scope) { return scope.endDate }, function(n, o) {
-        $location.path($scope.startDate + '/' + $scope.endDate);
-        $scope.refreshGraphs();
-    });
     $scope.$watch(function() {return $location.path()}, function(n, o) {
-        var r = n.match(/\/([0-9\-]+)\/([0-9\-]+)/)
-        $scope.startDate = r[1];
-        $scope.endDate = r[2];
+        var r = n.match(/\/([0-9\-]+)\/([0-9\-]+)\/([0-9])([0-9])([0-9])/);
+        if (r) {
+            $scope.startDate = r[1];
+            $scope.endDate = r[2];
+            $scope.mode = r[3];
+            $scope.differentiate = (r[4] == "1");
+            $scope.cumulative = (r[5] == "1");
+        } else {
+            var end = new Date();
+            var start = new Date(end.getUTCFullYear(), 0);
+
+            $scope.startDate = start.toISOString().slice(0,10);
+            $scope.endDate = end.toISOString().slice(0,10);
+            $scope.mode = 1;
+            $scope.differentiate = true;
+            $scope.cumulative = false;
+        }
+        $scope.refreshGraphs();
     });
 
     $scope.refreshGraphs = function() {
@@ -114,6 +207,14 @@ dashControllers.controller('dashTestCtrl', ['$scope', '$http', '$location', func
         });
     };
     $scope.redrawGraphs = function(data) {
+
+        if ($scope.mode == 0 && data.length > 60) {
+            $scope.mode = 1;
+        }
+        else if ($scope.mode == 1 && data.length < 27) {
+            $scope.mode = 0;
+        }
+
         data = data.sort(function(a, b) {
             return new Date(a['fields'].date) - new Date(b['fields'].date);
         });
@@ -128,7 +229,7 @@ dashControllers.controller('dashTestCtrl', ['$scope', '$http', '$location', func
         else
             $scope.pie.data = [];
     };
-    $scope.refreshGraphs();
+    //$scope.refreshGraphs();
 }]);
 month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 day_names = ['Sun', 'Mon', 'Tues', 'Wed', 'Thurs', 'Fri', 'Sat'];
@@ -142,6 +243,7 @@ function genChart(data, cumulative, mode) {
     var dates = [];
     var stats = [[], [], []];
     if (data.length < 14) mode = 0;
+    else if (data.length < 60 && mode == 2) mode = 1;
     if (mode == 0) {
         for (var i in data) {
             var element = data[i]['fields'];
@@ -198,7 +300,7 @@ function genChart(data, cumulative, mode) {
     else {
         var i=0;
         var m = new Date(data[i]['fields'].date).getUTCMonth();
-        var month = [0,0];
+        var month = [0,0,0];
         for (i; i < data.length; i++) {
             var element = data[i]['fields'];
             var date = new Date(element.date);
@@ -208,9 +310,11 @@ function genChart(data, cumulative, mode) {
             } else { // if we've gone into a new month,
                 // push last month's stuff
                 var lastMonth = new Date(date.getUTCFullYear(), date.getUTCMonth()-1);
+                month[2] = month[0] + month[1];
                 if (cumulative) cumulativeWeek(month, element);
                 stats[0].push(month[0]);
                 stats[1].push(month[1]);
+                stats[2].push(month[2]);
                 dates.push(month_names[lastMonth.getUTCMonth()] + ' ' + date.getUTCFullYear());
                 // start over
                 month[0] = parseInt(element['day_rep_signups']);
@@ -222,6 +326,7 @@ function genChart(data, cumulative, mode) {
         if (cumulative) cumulativeWeek(month, element);
         stats[0].push(month[0]);
         stats[1].push(month[1]);
+        stats[2].push(month[2]);
     }
 
     return {dates: dates, stats: stats, mode: mode};
@@ -239,7 +344,7 @@ function cumulativeElement(e) {
     return [
         e['day_rep_signups'] / (e['aggregate_rep_signups']-e['day_rep_signups'])*100,
         e['day_nonrep_signups'] / ((e['aggregate_total_signups'] - e['aggregate_rep_signups']) - e['day_nonrep_signups'])*100,
-        e['day_rep_signups']+e['day_nonrep_signups'] / (e['aggregate_total_signups'] - (e['day_rep_signups']+e['day_nonrep-signups']))*100
+        (e['day_rep_signups']+e['day_nonrep_signups']) / (e['aggregate_total_signups'] - (e['day_rep_signups']+e['day_nonrep_signups']))*100
     ]
 }
 
@@ -251,6 +356,7 @@ function cumulativeWeek(week, latestElement) {
 
 angular.module('dashFilters', []).filter('unit', function() {
     return function(input) {
+        input = parseInt(input);
         switch(input) {
             case 0:
                 return "day";
