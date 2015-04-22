@@ -138,6 +138,7 @@ dashControllers.controller('dashTestCtrl', ['$scope', '$http', '$location', func
                 $scope.refreshGraphs();
             }
         },
+        // Shift date-range back one week.
         back: function() { // again, same as forward but for one line.
             var stdt = new Date($scope.startDate); // startdate in a date variable so we can use it.
             var enddt = new Date($scope.endDate);
@@ -245,6 +246,7 @@ dashControllers.controller('dashTestCtrl', ['$scope', '$http', '$location', func
             $scope.pie.data = [r['stats'][0].reduce(function(x,y){return x+y}), r['stats'][1].reduce(function(x,y){return x+y})];
         else
             $scope.pie.data = [];
+        // when we redraw the graph, we have to also update the data url for the image.
         var url = $('#line')[0].toDataURL();
         $scope.downloadhref = url;
     };
@@ -257,7 +259,9 @@ function daysInMonth(d) {
     d = new Date(d); // make sure it's not a datestring, but an actual date object.
     return new Date(d.getFullYear(), d.getUTCMonth()+1, 0).getDate();
 }
-
+/**
+ Given the raw data returned from the server-side PostgreSQL Query, generate a format of chart that Chart.js will like.
+*/
 function genChart(data, cumulative, mode) {
     var dates = [];
     var stats = [[], [], []];
@@ -361,20 +365,24 @@ function absoluteElement(element) { // used for day view
     ];
 }
 
-function cumulativeElement(e) {
+function cumulativeElement(e) { // get cumulative DoD for the day view.
     return [
         e['day_rep_signups'] / (e['aggregate_rep_signups']-e['day_rep_signups'])*100,
         e['day_nonrep_signups'] / ((e['aggregate_total_signups'] - e['aggregate_rep_signups']) - e['day_nonrep_signups'])*100,
         (e['day_rep_signups']+e['day_nonrep_signups']) / (e['aggregate_total_signups'] - (e['day_rep_signups']+e['day_nonrep_signups']))*100
     ]
 }
-
-function cumulativeWeek(week, latestElement) { // objects/arrays are mutable, we take advantage of that when doing WoW calcs.
+// objects/arrays are mutable, we take advantage of that when doing WoW calcs.
+// Calculate the cumulative % growth, and replace the absolute measurement with it.
+function cumulativeWeek(week, latestElement) { 
     week[0] = week[0] / (latestElement['aggregate_rep_signups']-week[0])*100;
     week[1] = week[1] / ((latestElement['aggregate_total_signups'] - latestElement['aggregate_rep_signups']) - week[1])*100;
     week[2] = week[2] / (latestElement['aggregate_total_signups'] - week[2])*100;
 }
 
+/**
+ * Filter for turning mode (variable from 0-2) into a string for display purposes.
+*/
 angular.module('dashFilters', []).filter('unit', function() {
     return function(input) {
         input = parseInt(input);
@@ -391,8 +399,4 @@ angular.module('dashFilters', []).filter('unit', function() {
                 return "";
         }
     }
-});
-
-$('#download').click(function() {
-    console.log('hi');
 });
