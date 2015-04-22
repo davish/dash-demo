@@ -16,6 +16,7 @@ var dashControllers = angular.module('dashControllers', ['chart.js']);
 n = -1;
 
 dashControllers.controller('dashTestCtrl', ['$scope', '$http', '$location', function($scope, $http, $location) {
+    // used for toggling buttons with ng-click, this way we need only one function.
     $scope.toggle = function(b) {
         $scope[b] = !$scope[b];
         if (b === 'cumulative') {
@@ -49,7 +50,7 @@ dashControllers.controller('dashTestCtrl', ['$scope', '$http', '$location', func
         },
         onClick: function(points, evt) {
             var start = null, end = null;
-            if ($scope.mode == 1)  { // zoom into a day view
+            if ($scope.mode == 1)  { // zoom into a day view if we're in week mode
                 var match = points[0].label.match(/(\d+)\/(\d+)\/(\d+)/);
                 var date = new Date(2000+parseInt(match[3]), parseInt(match[1])-1, match[2]); // Y3K bug :)
                 start = date;
@@ -62,7 +63,7 @@ dashControllers.controller('dashTestCtrl', ['$scope', '$http', '$location', func
                 end = new Date(start.getUTCFullYear(), start.getUTCMonth()+1, 0);
                 $scope.mode = 1;
             }
-            if (start && end && start < end) {
+            if (start && end && start < end) { // make sure the chart won't give any errors
                 $scope.startDate = start.toISOString().slice(0, 10);
                 $scope.endDate = end.toISOString().slice(0, 10);
                 $scope.refreshGraphs();
@@ -102,7 +103,7 @@ dashControllers.controller('dashTestCtrl', ['$scope', '$http', '$location', func
                 endNow.getUTCFullYear(),
                 endNow.getUTCMonth(),
                 endNow.getUTCDate() - decrement
-            );
+            ); // this way the center of the chart always stays the same
             if (startNew < endNew) {
                 $scope.startDate = startNew.toISOString().slice(0, 10);
                 $scope.endDate = endNew.toISOString().slice(0, 10);
@@ -110,7 +111,7 @@ dashControllers.controller('dashTestCtrl', ['$scope', '$http', '$location', func
             }
 
         },
-        zoomOut: function() {
+        zoomOut: function() { // same as zoomIn, could possibly be one function, literally two lines different
             var increment;
             if ($scope.mode == 0) {
                 increment = 2;
@@ -124,12 +125,12 @@ dashControllers.controller('dashTestCtrl', ['$scope', '$http', '$location', func
             var startNew = new Date(
                 startNow.getUTCFullYear(),
                 startNow.getUTCMonth(),
-                startNow.getUTCDate() - increment
+                startNow.getUTCDate() - increment // different line
             );
             var endNew = new Date(
                 endNow.getUTCFullYear(),
                 endNow.getUTCMonth(),
-                endNow.getUTCDate() + increment
+                endNow.getUTCDate() + increment // different line
             );
             if (startNew < endNew) {
                 $scope.startDate = startNew.toISOString().slice(0, 10);
@@ -137,7 +138,7 @@ dashControllers.controller('dashTestCtrl', ['$scope', '$http', '$location', func
                 $scope.refreshGraphs();
             }
         },
-        back: function() {
+        back: function() { // again, same as forward but for one line.
             var stdt = new Date($scope.startDate); // startdate in a date variable so we can use it.
             var enddt = new Date($scope.endDate);
             var decrement; // ISOString with new start date.
@@ -186,7 +187,7 @@ dashControllers.controller('dashTestCtrl', ['$scope', '$http', '$location', func
     };
 
     $scope.changeLocation  = function(n, o){
-        if (typeof n !== 'undefined')
+        if (typeof n !== 'undefined') // if it's not when the page first loads, i.e. stuff is undefined.
             $location.path($scope.startDate+'/'+$scope.endDate+'/'+$scope.mode+($scope.differentiate?"1":"0")+($scope.cumulative ? "1":"0"));
     };
     $scope.$watch(function(scope) {return scope.startDate}, $scope.changeLocation);
@@ -196,15 +197,14 @@ dashControllers.controller('dashTestCtrl', ['$scope', '$http', '$location', func
     $scope.$watch(function(scope){return scope.cumulative}, $scope.changeLocation);
 
     $scope.$watch(function() {return $location.path()}, function(n, o) {
-        var r = n.match(/\/([0-9\-]+)\/([0-9\-]+)\/([0-9])([0-9])([0-9])/);
-        console.log(n);
-        if (r) {
+        var r = n.match(/\/([0-9\-]+)\/([0-9\-]+)\/([0-9])([0-9])([0-9])/); // parse the URL
+        if (r) { // set the values
             $scope.startDate = r[1];
             $scope.endDate = r[2];
             $scope.mode = r[3];
             $scope.differentiate = (r[4] == "1");
             $scope.cumulative = (r[5] == "1");
-        } else {
+        } else { // if nothing, then set default vals
             var end = new Date();
             var start = new Date(end.getUTCFullYear(), 0);
 
@@ -217,22 +217,22 @@ dashControllers.controller('dashTestCtrl', ['$scope', '$http', '$location', func
         $scope.refreshGraphs();
     });
 
-    $scope.refreshGraphs = function() {
+    $scope.refreshGraphs = function() { // get new data
         $http.get('/dashboard/api?method=range&start='+$scope.startDate+'&end='+$scope.endDate).success(function(d) {
             var data = JSON.parse(d.data);
             $scope.rawData = data;
             $scope.redrawGraphs(data);
         });
     };
-    $scope.redrawGraphs = function(data) {
-        if ($scope.mode == 0 && data.length > 45) {
+    $scope.redrawGraphs = function(data) { // with data, redraw graphs
+        if ($scope.mode == 0 && data.length > 45) { // if it's too big for day view, change to week.
             $scope.mode = 1;
         }
         else if ($scope.mode == 1 && data.length < 27) {
             $scope.mode = 0;
         }
 
-        data = data.sort(function(a, b) {
+        data = data.sort(function(a, b) { // make sure data is in ascending order by date
             return new Date(a['fields'].date) - new Date(b['fields'].date);
         });
 
@@ -261,9 +261,8 @@ function daysInMonth(d) {
 function genChart(data, cumulative, mode) {
     var dates = [];
     var stats = [[], [], []];
-    if (data.length < 14) mode = 0;
-    else if (data.length < 60 && mode == 2) mode = 1;
-    if (mode == 0) {
+
+    if (mode == 0) { // just count by element for days
         for (var i in data) {
             var element = data[i]['fields'];
             var fdate = new Date(element.date);
@@ -275,7 +274,9 @@ function genChart(data, cumulative, mode) {
         }
     }
     /*
-     * Have to remember that some data might not be there. if (data.length <=56)
+     * Have to remember that some data might not be there.
+     * Increment counters until you hit a Sunday, in which case you push to the array and start incrementing from
+     * the beginning again.
      */
     else if (mode == 1) { // max is eight weeks. (should it be 12 weeks?)
         var i=0;
@@ -316,6 +317,7 @@ function genChart(data, cumulative, mode) {
         stats[1].push(week[1]);
         stats[2].push(week[0]+week[1]);
     }
+    // same thing with months, but we have the variable m which keeps track of current month.
     else {
         var i=0;
         var m = new Date(data[i]['fields'].date).getUTCMonth();
@@ -330,7 +332,7 @@ function genChart(data, cumulative, mode) {
                 // push last month's stuff
                 var lastMonth = new Date(date.getUTCFullYear(), date.getUTCMonth()-1);
                 month[2] = month[0] + month[1];
-                if (cumulative) cumulativeWeek(month, element);
+                if (cumulative) cumulativeWeek(month, element); // cumulativeWeek also, ironically, works for months.
                 stats[0].push(month[0]);
                 stats[1].push(month[1]);
                 stats[2].push(month[2]);
@@ -351,7 +353,7 @@ function genChart(data, cumulative, mode) {
     return {dates: dates, stats: stats, mode: mode};
 }
 
-function absoluteElement(element) {
+function absoluteElement(element) { // used for day view
     return [
         element['day_rep_signups'],
         element['day_nonrep_signups'],
@@ -367,7 +369,7 @@ function cumulativeElement(e) {
     ]
 }
 
-function cumulativeWeek(week, latestElement) {
+function cumulativeWeek(week, latestElement) { // objects/arrays are mutable, we take advantage of that when doing WoW calcs.
     week[0] = week[0] / (latestElement['aggregate_rep_signups']-week[0])*100;
     week[1] = week[1] / ((latestElement['aggregate_total_signups'] - latestElement['aggregate_rep_signups']) - week[1])*100;
     week[2] = week[2] / (latestElement['aggregate_total_signups'] - week[2])*100;
