@@ -186,7 +186,7 @@ dashControllers.controller('dashTestCtrl', ['$scope', '$http', '$location', func
     };
 
     $scope.changeLocation  = function(n, o){
-        if (n)
+        if (typeof n !== 'undefined')
             $location.path($scope.startDate+'/'+$scope.endDate+'/'+$scope.mode+($scope.differentiate?"1":"0")+($scope.cumulative ? "1":"0"));
     };
     $scope.$watch(function(scope) {return scope.startDate}, $scope.changeLocation);
