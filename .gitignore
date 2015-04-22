@@ -2,4 +2,6 @@
 .idea/
 *.pyc
 *.sqlite3
+dashenv
+staticfiles
 bower_components
